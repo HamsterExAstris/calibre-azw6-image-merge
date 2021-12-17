@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import struct, locale, imghdr, os
+import struct, imghdr, os, sys
 
 #################################################################################
 #                                                                               #
@@ -115,7 +115,7 @@ class MobiMergeHDImage:
     hdimage_dict = None
 
     def __init__(self, mobi_data):
-        self.mobi = mobi_data
+        self.mobi = bytearray(mobi_data)
         self.record_dict = self.get_record_dict(self.mobi)
         if self.mobi[BHDR_OFFSET_FILE_IDENT:BHDR_OFFSET_FILE_IDENT+8] != b'BOOKMOBI':
             print("This eBook is not a Mobi.")
@@ -128,7 +128,7 @@ class MobiMergeHDImage:
         record_count, = struct.unpack_from(">H", data, current_offset)
         record_dict = dict()
 
-        record_dict["COUNT"] = record_count
+        record_dict[sys.maxsize] = record_count
 
         for index in range(0, record_count):
             record_dict[index] = dict()
@@ -160,7 +160,7 @@ class MobiMergeHDImage:
         
         image_index = 0
         for index, val in sorted(azwres_dict.items()):
-            if index != "COUNT" and azwres[val["OFFSET"]:val["OFFSET"] + 2] != b"\xe9\x8e":
+            if index != sys.maxsize and azwres[val["OFFSET"]:val["OFFSET"] + 2] != b"\xe9\x8e":
                 if azwres[val["OFFSET"]:val["OFFSET"] + 4] in CONTAINER_NEEDED_TYPES:
                     self.hdimage_dict[image_index] = dict()
                     self.hdimage_dict[image_index]["INDEX"] = index
@@ -171,7 +171,7 @@ class MobiMergeHDImage:
                     image_index += 1
 
     def record_offset_update(self, record_index, modified_offset_size):
-        for target_record_index in range(record_index + 1, self.record_dict["COUNT"]):
+        for target_record_index in range(record_index + 1, self.record_dict[sys.maxsize]):
             self.record_dict[target_record_index]["OFFSET"] = self.record_dict[target_record_index]["OFFSET"] + modified_offset_size
             self.mobi = "".join(
                 (
@@ -193,8 +193,8 @@ class MobiMergeHDImage:
 
         images_dict = dict()
         image_index = 0
-        for record_index in range(first_image_index, self.record_dict["COUNT"]):
-            if record_index + 1 == self.record_dict["COUNT"]:
+        for record_index in range(first_image_index, self.record_dict[sys.maxsize]):
+            if record_index + 1 == self.record_dict[sys.maxsize]:
                 img = self.mobi[self.record_dict[record_index]["OFFSET"]:]
             else:    
                 img = self.mobi[self.record_dict[record_index]["OFFSET"]:self.record_dict[record_index + 1]["OFFSET"]]
@@ -209,7 +209,6 @@ class MobiMergeHDImage:
         for index, hdimage in list(self.hdimage_dict.items()):
             if hdimage["TYPE"] == CONTAINER_CONTENT_TYPE_IMAGE:
                 # If HDImage type is IMAGE, do merge.
-                image_offset = self.record_dict[images_dict[index]["INDEX"]]["OFFSET"]
 
                 if self.mobi.find(images_dict[index]["CONTENT"]) != -1:
                     size_difference = len(hdimage["CONTENT"]) - len(images_dict[index]["CONTENT"])
