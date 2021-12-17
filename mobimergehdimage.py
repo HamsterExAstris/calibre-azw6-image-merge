@@ -101,7 +101,7 @@ def get_charset(data, offset):
     if charset_id in TEXT_ENCODING_MAP:
         return TEXT_ENCODING_MAP[charset_id]
     else:
-        print u"Unknown Charset %d" % charset_id
+        print("Unknown Charset %d" % charset_id)
         raise
 
 def get_book_title(data, base_offset, name_offset, length_offset, charset):
@@ -118,7 +118,7 @@ class MobiMergeHDImage:
         self.mobi = mobi_data
         self.record_dict = self.get_record_dict(self.mobi)
         if self.mobi[BHDR_OFFSET_FILE_IDENT:BHDR_OFFSET_FILE_IDENT+8] != b'BOOKMOBI':
-            print u"This eBook is not a Mobi."
+            print("This eBook is not a Mobi.")
             raise
         self.charset = get_charset(self.mobi, self.record_dict[0]["OFFSET"] + BHDR_RECORD0_OFFSET_TEXT_ENCODING)
         self.book_title = get_book_title(self.mobi, self.record_dict[0]["OFFSET"], BHDR_RECORD0_OFFSET_FULL_NAME_OFFSET, BHDR_RECORD0_OFFSET_FULL_NAME_LENGTH, self.charset)
@@ -144,7 +144,7 @@ class MobiMergeHDImage:
         with open(res_file, 'rb') as azwresfile:
             azwres = azwresfile.read()
         if azwres[CHDR_OFFSET_FILE_IDENT:CHDR_OFFSET_FILE_IDENT + 8] != b'RBINCONT':
-            print u"%s is not a HDImage container." % os.path.basename(res_file)
+            print("%s is not a HDImage container." % os.path.basename(res_file))
             raise
         
         azwres_dict = self.get_record_dict(azwres)
@@ -152,8 +152,8 @@ class MobiMergeHDImage:
         azwres_title = get_book_title(azwres, azwres_dict[0]["OFFSET"], CHDR_RECORD0_OFFSET_FULL_NAME_OFFSET, CHDR_RECORD0_OFFSET_FULL_NAME_LENGTH, self.charset)
 
         if self.book_title != azwres_title:
-            print u"Book mismatch. Book title and HDImage container title is not same. "
-            print u"Book: %s, Container: %s" % (self.book_title, azwres_title)
+            print("Book mismatch. Book title and HDImage container title is not same. ")
+            print("Book: %s, Container: %s" % (self.book_title, azwres_title))
             raise
 
         self.hdimage_dict = dict()
@@ -183,7 +183,7 @@ class MobiMergeHDImage:
 
     def merge(self):
         if self.hdimage_dict is None:
-            print u"'azw.res' file is not loaded yet."
+            print("'azw.res' file is not loaded yet.")
             raise
 
         first_record_offset = self.record_dict[0]['OFFSET']
@@ -206,7 +206,7 @@ class MobiMergeHDImage:
                 image_index += 1
 
         # Merge
-        for index, hdimage in self.hdimage_dict.items():
+        for index, hdimage in list(self.hdimage_dict.items()):
             if hdimage["TYPE"] == CONTAINER_CONTENT_TYPE_IMAGE:
                 # If HDImage type is IMAGE, do merge.
                 image_offset = self.record_dict[images_dict[index]["INDEX"]]["OFFSET"]
