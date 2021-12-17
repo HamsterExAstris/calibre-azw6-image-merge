@@ -172,14 +172,10 @@ class MobiMergeHDImage:
 
     def record_offset_update(self, record_index, modified_offset_size):
         for target_record_index in range(record_index + 1, self.record_dict[sys.maxsize]):
-            self.record_dict[target_record_index]["OFFSET"] = self.record_dict[target_record_index]["OFFSET"] + modified_offset_size
-            self.mobi = "".join(
-                (
-                    self.mobi[:self.record_dict[target_record_index]["INFO_OFFSET"]],
-                    struct.pack(">L", self.record_dict[target_record_index]["OFFSET"]),
-                    self.mobi[self.record_dict[target_record_index]["INFO_OFFSET"] + 4:]
-                )
-            )
+            newoffset = self.record_dict[target_record_index]["OFFSET"] + modified_offset_size
+            self.record_dict[target_record_index]["OFFSET"] = newoffset
+            infooffset = self.record_dict[target_record_index]["INFO_OFFSET"]           
+            self.mobi[infooffset:infooffset + 4] = struct.pack(">L", newoffset)
 
     def merge(self):
         if self.hdimage_dict is None:
@@ -212,8 +208,12 @@ class MobiMergeHDImage:
 
                 if self.mobi.find(images_dict[index]["CONTENT"]) != -1:
                     size_difference = len(hdimage["CONTENT"]) - len(images_dict[index]["CONTENT"])
-
-                    self.mobi = self.mobi.replace(images_dict[index]["CONTENT"], hdimage["CONTENT"])
+                    
+                    original_index = images_dict[index]["INDEX"]
+                    if original_index + 1 == self.record_dict[sys.maxsize]:
+                        self.mobi[self.record_dict[original_index]["OFFSET"]:] = hdimage["CONTENT"]
+                    else:    
+                        self.mobi[self.record_dict[original_index]["OFFSET"]:self.record_dict[original_index + 1]["OFFSET"]] = hdimage["CONTENT"]
 
                     self.record_offset_update(images_dict[index]["INDEX"], size_difference)
 
