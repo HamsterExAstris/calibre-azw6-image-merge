@@ -9,8 +9,8 @@ from calibre.customize import (FileTypePlugin)
 from calibre_plugins.azw6_image_merge import mobiparse, mobimergehdimage
 
 __license__ = "GPL v3"
-__copyright__ = "2021, Andrew Timson"
-__version__ = "1.0.0"
+__copyright__ = "2021, Choryu Park and Andrew Timson"
+__version__ = "1.0.1"
 
 PLUGIN_NAME = "AZW6 Image Merge"
 PLUGIN_VERSION_TUPLE = tuple([int(x) for x in __version__.split(".")])
@@ -46,7 +46,7 @@ class SafeUnbuffered:
 
 class AZW6Input(FileTypePlugin):
     name = "AZW6 Image Merge"
-    author = "Andrew Timson"
+    author = "Choryu Park and Andrew Timson"
     # The original Kindle for PC file will have an AZW extension, though DeDRM will change it to AZW3.
     file_types = set(["azw"])
     on_import = True
